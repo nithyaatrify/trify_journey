@@ -2,10 +2,27 @@ import pandas as pd
 import requests
 from haversine import haversine, Unit
 from tqdm import tqdm
+import time
 
 # Load coordinates from the CSV file
 coordinates_df = pd.read_csv('coordinates.csv')
+def fetch_route_with_retry(start_coord, end_coord, api_key, max_retries=3):
+    retries = 0
+    while retries < max_retries:
+        endpoint = f'https://api.openrouteservice.org/v2/directions/driving-car?api_key={api_key}&start={start_coord[1]},{start_coord[0]}&end={end_coord[1]},{end_coord[0]}'
+        response = requests.get(endpoint)
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 429:
+            retries += 1
+            print(f"Rate limit exceeded. Retrying ({retries}/{max_retries})...")
+            time.sleep(5)  # Wait for 5 seconds before retrying (adjust as needed)
+        else:
+            print(f"Failed to fetch route: {response.status_code}")
+            return None
 
+    print("Exceeded maximum retries. Unable to fetch route.")
+    return None
 # Function to calculate distance between two coordinates using Haversine formula
 def calculate_distance(coord1, coord2):
     return haversine(coord1, coord2, unit=Unit.METERS)
