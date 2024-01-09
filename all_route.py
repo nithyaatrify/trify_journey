@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 from haversine import haversine, Unit
+from tqdm import tqdm
 
 # Load coordinates from the CSV file
 coordinates_df = pd.read_csv('coordinates.csv')
@@ -23,23 +24,27 @@ def fetch_route(start_coord, end_coord, api_key):
 journeys = []
 journey_id = 1
 api_key = '5b3ce3597851110001cf6248a805b50e09d9469eaf4900d62ff9de75'  # Replace with your actual API key
-for i in range(len(coordinates_df)):
-    for j in range(i+1, len(coordinates_df)):
-        start_coord = (coordinates_df.loc[i, 'Latitude'], coordinates_df.loc[i, 'Longitude'])
-        end_coord = (coordinates_df.loc[j, 'Latitude'], coordinates_df.loc[j, 'Longitude'])
-        distance = calculate_distance(start_coord, end_coord)
-        
-        # Fetch route details
-        route_details = fetch_route(start_coord, end_coord, api_key)
-        if route_details:
-            waypoints = route_details['features'][0]['geometry']['coordinates']
-            journey = {
-                'Journey Id': journey_id,
-            }
-            for step, waypoint in enumerate(waypoints):
-                journey[f'JS{step+1}'] = f"{waypoint[1]}, {waypoint[0]}"
-            journeys.append(journey)
-            journey_id += 1
+total_journeys = (len(coordinates_df) * (len(coordinates_df) - 1)) // 2  # Total number of journeys
+
+with tqdm(total=total_journeys, desc="Fetching routes") as pbar:
+    for i in range(len(coordinates_df)):
+        for j in range(i + 1, len(coordinates_df)):
+            start_coord = (coordinates_df.loc[i, 'Latitude'], coordinates_df.loc[i, 'Longitude'])
+            end_coord = (coordinates_df.loc[j, 'Latitude'], coordinates_df.loc[j, 'Longitude'])
+            distance = calculate_distance(start_coord, end_coord)
+            
+            # Fetch route details
+            route_details = fetch_route(start_coord, end_coord, api_key)
+            if route_details:
+                waypoints = route_details['features'][0]['geometry']['coordinates']
+                journey = {'Journey Id': journey_id}
+                for step, waypoint in enumerate(waypoints):
+                    journey[f'JS{step + 1}'] = f"{waypoint[1]}, {waypoint[0]}"
+                journeys.append(journey)
+                journey_id += 1
+                
+            pbar.update(1)  # Update progress bar
+            pbar.set_postfix({"Completed Journeys": journey_id - 1})  # Update completed journeys count in the progress bar
 
 # Create a DataFrame and save as CSV
 output_df = pd.DataFrame(journeys)
