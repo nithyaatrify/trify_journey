@@ -27,65 +27,49 @@ def fetch_route_with_rate_limit(start_coord, end_coord, api_keys):
         else:
             print(f"Failed to fetch route: {response.status_code}")
             return None  # Stop further attempts on encountering other errors
-    print("All API keys have exceeded the daily limit.")
+    print("All available API keys have exceeded the daily limit.")
     return "403_error"
 
 # Generate all possible journeys and waypoints
 journeys = []
 journey_id = 1
 api_keys = [
-     # API key 1
     '5b3ce3597851110001cf62489c16de46c5d942ada101f225329491fd',  # API key 2
-    '5b3ce3597851110001cf6248a5b52add7f72445cbff5c145c12f79ba' ,
-     '5b3ce3597851110001cf62487ebcbc97ae02431496a28074fb7c1f44'# API key 3
+    '5b3ce3597851110001cf6248a5b52add7f72445cbff5c145c12f79ba'   # API key 3
 ]
 
 total_journeys = (len(coordinates_df) * (len(coordinates_df) - 1)) // 2  # Total number of journeys
 
 continue_generation = True  # Flag to continue or pause generation
 
-with tqdm(total=total_journeys, desc="Fetching routes") as pbar:
-    for i in range(len(coordinates_df)):
-        for j in range(i + 1, len(coordinates_df)):
-            if not continue_generation:
-                # Pause the generation process until 'continue_generation' becomes True
-                while True:
-                    user_input = input("Enter 'continue generation' to resume: ")
-                    if user_input.lower() == 'continue generation':
-                        continue_generation = True
-                        break
+while continue_generation:
+    with tqdm(total=total_journeys, desc="Fetching routes") as pbar:
+        for i in range(len(coordinates_df)):
+            for j in range(i + 1, len(coordinates_df)):
+                if not continue_generation:
+                    break  # Exit the loop if generation is stopped
 
-            if not continue_generation:
-                break  # Exit the loop if generation is still paused
-
-            start_coord = (coordinates_df.loc[i, 'Latitude'], coordinates_df.loc[i, 'Longitude'])
-            end_coord = (coordinates_df.loc[j, 'Latitude'], coordinates_df.loc[j, 'Longitude'])
-            distance = calculate_distance(start_coord, end_coord)
-            
-            # Fetch route details with rate limiting and API key rotation
-            route_details = fetch_route_with_rate_limit(start_coord, end_coord, api_keys)
-            if route_details and route_details != "403_error":
-                waypoints = route_details['features'][0]['geometry']['coordinates']
-                journey = {'Journey Id': journey_id}
-                for step, waypoint in enumerate(waypoints):
-                    journey[f'JS{step + 1}'] = f"{waypoint[1]}, {waypoint[0]}"
-                journeys.append(journey)
-                journey_id += 1
-            elif route_details == "403_error":
-                continue_generation = False
-                break  # Stop the generation if all keys get a 403 error
+                start_coord = (coordinates_df.loc[i, 'Latitude'], coordinates_df.loc[i, 'Longitude'])
+                end_coord = (coordinates_df.loc[j, 'Latitude'], coordinates_df.loc[j, 'Longitude'])
+                distance = calculate_distance(start_coord, end_coord)
                 
-            pbar.update(1)  # Update progress bar
-            pbar.set_postfix({"Completed Journeys": journey_id - 1})  # Update completed journeys count in the progress bar
+                # Fetch route details with rate limiting and API key rotation
+                route_details = fetch_route_with_rate_limit(start_coord, end_coord, api_keys)
+                if route_details and route_details != "403_error":
+                    waypoints = route_details['features'][0]['geometry']['coordinates']
+                    journey = {'Journey Id': journey_id}
+                    for step, waypoint in enumerate(waypoints):
+                        journey[f'JS{step + 1}'] = f"{waypoint[1]}, {waypoint[0]}"
+                    journeys.append(journey)
+                    journey_id += 1
+                elif route_details == "403_error":
+                    continue_generation = False
+                    break  # Stop the generation if both keys get a 403 error
 
-# Prompt user to continue generation
-if not continue_generation:
-    user_input = input("All API keys have encountered a 403 error. Enter 'continue generation' to resume: ")
-    if user_input.lower() == 'continue generation':
-        continue_generation = True
-        # Continue the generation process as needed
+                pbar.update(1)  # Update progress bar
+                pbar.set_postfix({"Completed Journeys": journey_id - 1})  # Update completed journeys count in the progress bar
 
 # Create a DataFrame and save as CSV (if needed)
-if continue_generation:
+if journeys:
     output_df = pd.DataFrame(journeys)
     output_df.to_csv('waypoints_journeys.csv', index=False)
