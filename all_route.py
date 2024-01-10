@@ -34,9 +34,10 @@ def fetch_route_with_rate_limit(start_coord, end_coord, api_keys):
 journeys = []
 journey_id = 1
 api_keys = [
-    '5b3ce3597851110001cf62487ebcbc97ae02431496a28074fb7c1f44',  # API key 1
+     # API key 1
     '5b3ce3597851110001cf62489c16de46c5d942ada101f225329491fd',  # API key 2
-    '5b3ce3597851110001cf6248a5b52add7f72445cbff5c145c12f79ba'   # API key 3
+    '5b3ce3597851110001cf6248a5b52add7f72445cbff5c145c12f79ba' ,
+     '5b3ce3597851110001cf62487ebcbc97ae02431496a28074fb7c1f44'# API key 3
 ]
 
 total_journeys = (len(coordinates_df) * (len(coordinates_df) - 1)) // 2  # Total number of journeys
