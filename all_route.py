@@ -6,8 +6,9 @@ import time
 import logging
 
 API_KEYS = [
-    '5b3ce3597851110001cf6248617202d35c7742caaab67aa8be17e6c2',
     '5b3ce3597851110001cf6248a5b52add7f72445cbff5c145c12f79ba',
+    '5b3ce3597851110001cf6248617202d35c7742caaab67aa8be17e6c2',
+    
 ]
 
 API_ENDPOINT = 'https://api.openrouteservice.org/v2/directions/driving-car'
