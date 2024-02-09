@@ -7,7 +7,6 @@ import logging
 
 API_KEYS = [
     '5b3ce3597851110001cf62485bd000faf04844e8ac1fa6fb0bac07ac',
-    
 ]
 
 API_ENDPOINT = 'https://api.openrouteservice.org/v2/directions/driving-car'
@@ -38,7 +37,7 @@ def fetch_route_with_rate_limit(start_coord, end_coord):
             return None
 
     logging.error("All available API keys have exceeded the daily limit.")
-    return "403_error"
+    return None
 
 journeys = []
 total_journeys = (len(coordinates_df) * (len(coordinates_df) - 1)) // 2
@@ -62,7 +61,7 @@ with tqdm(total=total_journeys, desc="Fetching routes") as pbar:
             distance = calculate_distance(start_coord, end_coord)
 
             route_details = fetch_route_with_rate_limit(start_coord, end_coord)
-            if route_details:
+            if route_details is not None:
                 waypoints = route_details['features'][0]['geometry']['coordinates']
                 journey = {'Journey Id': f"{i + 1}:{j + 1}"}
                 journey['JS0'] = f"{start_coord[0]}, {start_coord[1]}"
