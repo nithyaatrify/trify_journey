@@ -6,8 +6,7 @@ import time
 import logging
 
 API_KEYS = [
-    '5b3ce3597851110001cf6248a5b52add7f72445cbff5c145c12f79ba',
-    '5b3ce3597851110001cf62484477bd2651be4e3e962535a2a57c0d6d',
+    '5b3ce3597851110001cf62485bd000faf04844e8ac1fa6fb0bac07ac',
     
 ]
 
